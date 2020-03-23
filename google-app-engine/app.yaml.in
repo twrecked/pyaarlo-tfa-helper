@@ -1,7 +1,7 @@
 runtime: python37
 
 env_variables:
-  AUTH_KEY: 'XXXXXX'
+  AUTH_TOKEN: 'XXXXXX'
   SMTP_SERVER: 'xxx.xx:2020'
   SMTP_USERNAME: 'testing'
   SMTP_PASSWORD: '123'
