@@ -138,6 +138,7 @@ def parse_mail(mail):
 
 
 @app.route('/enc')
+@app.route('/')
 def enc():
     return render_template( 'encrypt.html' )
 
