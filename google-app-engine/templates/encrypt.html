@@ -6,10 +6,18 @@
 	<body>
 
 	<br>
-	<h1>Pyaarlo Output Encryption</h1>
+	<h2>Pyaarlo Output Encryption</h2>
+	<br>
 	<form action="/encrypt" method="post" enctype="multipart/form-data">
-		<label for="encrypt">Choose a file to encrypt:</label>
-		<input type="file" id="file" name="file">
+		<label for="plain_text_file">Choose a file to encrypt:</label>
+		<br>
+		<input type="file" id="plain_text_file" name="plain_text_file">
+		<input type="submit" value="Submit"> 
+	</form>
+	<form action="/encrypt" method="post">
+		<label for="plain_text">Or paste some logs encrypt:</label>
+		<br>
+		<textarea name="plain_text" id="plain_text" rows="4" cols="50">Paste Aarlo logs here.</textarea>
 		<input type="submit" value="Submit"> 
 	</form>
 

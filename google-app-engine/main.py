@@ -145,20 +145,30 @@ def enc():
 
 @app.route('/encrypt',methods=['POST'])
 def encrypt():
-    # check file is there
-    if 'file' not in request.files:
+
+    # fill this with file or pasted contents
+    obj = None
+
+    # check file first
+    if 'plain_text_file' in request.files:
+        obj = ""
+        plain_text_file = request.files['plain_text_file']
+        for line in plain_text_file:
+            obj += line.decode()
+
+    # now check for pasted text
+    if obj is None:
+        obj = request.form.get('plain_text',None)
+
+    # still nothing, then stop
+    if obj is None:
         return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'no attached file' }})
-    clear = request.files['file']
+                         'data': { 'success': False, 'error': 'no attached file or pasted text' }})
 
     from Crypto.Cipher import AES
     from Crypto.Random import get_random_bytes
     from Crypto.PublicKey import RSA
     from Crypto.Cipher import PKCS1_OAEP
-
-    obj = ""
-    for line in clear:
-        obj += line.decode()
 
     try:
         # pickle and resize object
