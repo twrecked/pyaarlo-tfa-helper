@@ -6,7 +6,7 @@ import re
 import pickle
 import base64
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response
 
 from google.cloud import datastore
 
@@ -137,6 +137,11 @@ def parse_mail(mail):
     return email, code
 
 
+@app.route('/enc')
+def enc():
+    return render_template( 'encrypt.html' )
+
+
 @app.route('/encrypt',methods=['POST'])
 def encrypt():
     # check file is there
@@ -144,9 +149,6 @@ def encrypt():
         return jsonify({ 'meta': { 'code': 400 },
                          'data': { 'success': False, 'error': 'no attached file' }})
     clear = request.files['file']
-    if clear.filename != 'clear.txt':
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'incorrectly attached file' }})
 
     from Crypto.Cipher import AES
     from Crypto.Random import get_random_bytes
@@ -175,7 +177,8 @@ def encrypt():
 
         # create key/object dictionary, pickle and base64 encode
         key_obj = pickle.dumps({'k': key, 'n': nonce, 'o': obj, 't': tag})
-        return "{}\n{}{}\n".format(BEGIN_PYAARLO_DUMP, base64.encodebytes(key_obj).decode(), END_PYAARLO_DUMP)
+        enc_str = "{}\n{}{}\n".format(BEGIN_PYAARLO_DUMP, base64.encodebytes(key_obj).decode(), END_PYAARLO_DUMP)
+        return Response(enc_str, mimetype='text/plain')
     except ValueError as err:
         return jsonify({ 'meta': { 'code': 400 },
                          'data': { 'success': False, 'error': 'encryption error' }})
