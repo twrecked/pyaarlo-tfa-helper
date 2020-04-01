@@ -1,0 +1,6 @@
+#!/bin/bash
+#
+
+curl -F 'file=@-;filename=clear.txt' http://127.0.0.1:8080/encrypt
+#curl -F 'file=@-;filename=clear.txt' https://YOUR_PROJECT_HERE.appspot.com/encrypt
+
