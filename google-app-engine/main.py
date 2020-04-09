@@ -30,6 +30,13 @@ datastore_client = datastore.Client()
 app = Flask(__name__)
 
 
+def get_arg(arg, default=None):
+    value = request.args.get(arg,None)
+    if value is None:
+        value = request.values.get(arg,default)
+    return value
+
+
 def fixup_email(email):
     if email is not None:
         email = email.replace('@','.')
@@ -122,7 +129,29 @@ def has_permission(fmail,token):
     return check_admin_token(token) or check_user_token(fmail,token)
 
 
+def parse_msg(msg):
+
+    # Sanity check.
+    if msg is None:
+        return None
+
+    # Search for bits we are interested in
+    for line in msg.split(r'\n'):
+        line = line.rstrip()
+
+        # look for code
+        m = re.match(r'.* (\d{6})\.\W*$',line)
+        if m is not None:
+            return m.group(1)
+
+    return None
+
+
 def parse_mail(mail):
+
+    # Sanity check.
+    if mail is None:
+        return None, None
 
     # Search for bits we are interested in
     email = None
@@ -131,12 +160,12 @@ def parse_mail(mail):
         line = line.decode().rstrip()
 
         # look for fmail
-        m = re.match('^To:\W+<*(.+?)>*\W*$',line)
+        m = re.match(r'^To:\W+<*(.+?)>*\W*$',line)
         if m is not None:
             email = m.group(1)
 
         # look for code
-        m = re.match('^\W*(\d{6})\W*$',line)
+        m = re.match(r'^\W*(\d{6})\W*$',line)
         if m is not None:
             code = m.group(1)
 
@@ -275,13 +304,13 @@ def clear():
                      'data': { 'success': True, 'email': email }})
 
 
-@app.route('/add')
+@app.route('/add', methods=['GET', 'POST'])
 def add():
 
     # get args
-    email = request.args.get('email',None)
+    email = get_arg('email')
     fmail = fixup_email(email)
-    token = request.args.get('token',None)
+    token = get_arg('token')
 
     # validate email/token
     if not has_permission(fmail,token):
@@ -291,11 +320,13 @@ def add():
         return jsonify({ 'meta': { 'code': 400 },
                          'data': { 'success': False, 'error': 'no valid email found', 'code': None }})
 
-    # set email/code info
-    code = request.args.get('code',None)
+    # read code if passed directly or parse from sms
+    code = get_arg('code')
     if code is None:
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'please provide code', 'code': None }})
+        code = parse_msg(get_arg('msg'))
+        if code is None:
+            return jsonify({ 'meta': { 'code': 400 },
+                             'data': { 'success': False, 'error': 'please provide code', 'code': None }})
 
     set_user_code(fmail,code)
     return jsonify({ 'meta': { 'code': 200 },
