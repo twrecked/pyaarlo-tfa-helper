@@ -1,5 +1,5 @@
 #!/bin/bash
 #
 
-curl -F 'file=@-;filename=email.txt' https://YOUR_PROJECT_HERE.appspot.com/mail?token=YOUR_TOKEN_HERE
+curl -s -F 'plain_text_file=@-;filename=email.txt' https://YOUR_PROJECT_HERE.appspot.com/mail?token=YOUR_TOKEN_HERE
 

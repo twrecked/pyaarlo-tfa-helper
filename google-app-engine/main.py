@@ -3,10 +3,27 @@ import os
 import time
 import secrets
 import re
+import pickle
+import base64
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response
 
 from google.cloud import datastore
+
+
+BEGIN_PYAARLO_DUMP = "-----BEGIN PYAARLO DUMP-----"
+END_PYAARLO_DUMP = "-----END PYAARLO DUMP-----"
+
+PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1oYXnbQPxREiVPUIRkgk
+h+ehjxHnwz34NsjhjgN1oSKmHpf4cL4L/V4tMnj5NELEmLyTrzAZbeewUMwyiwXO
+3l+cSjjoDKcPBSj4uxjWsq74Q5TLHGjOtkFwaqqxtvsVn3fGFWBO405xpvp7jPUc
+BOvBQaUBUaR9Tbw5anMOzeavUwUTRp2rjtbWyj2P7PEp49Ixzw0w+RjIVrzzevAo
+AD7SVb6U8P77fht4k9krbIFckC/ByY48HhmF+edh1GZAgLCHuf43tGg2upuH5wf+
+AGv/Xlc+9ScTjEp37uPiCpHcB1ur83AFTjcceDIm+VDKF4zQrj88zmL7JqZy+Upx
+UQIDAQAB
+-----END PUBLIC KEY-----"""
+
 
 datastore_client = datastore.Client()
 
@@ -124,6 +141,67 @@ def parse_mail(mail):
             code = m.group(1)
 
     return email, code
+
+
+@app.route('/enc')
+@app.route('/')
+def enc():
+    return render_template( 'encrypt.html' )
+
+
+@app.route('/encrypt',methods=['POST'])
+def encrypt():
+
+    # fill this with file or pasted contents
+    obj = None
+
+    # check file first
+    if 'plain_text_file' in request.files:
+        obj = ""
+        plain_text_file = request.files['plain_text_file']
+        for line in plain_text_file:
+            obj += line.decode()
+
+    # now check for pasted text
+    if obj is None:
+        obj = request.form.get('plain_text',None)
+
+    # still nothing, then stop
+    if obj is None:
+        return jsonify({ 'meta': { 'code': 400 },
+                         'data': { 'success': False, 'error': 'no attached file or pasted text' }})
+
+    from Crypto.Cipher import AES
+    from Crypto.Random import get_random_bytes
+    from Crypto.PublicKey import RSA
+    from Crypto.Cipher import PKCS1_OAEP
+
+    try:
+        # pickle and resize object
+        obj = pickle.dumps(obj)
+        obj += b' ' * (16 - len(obj) % 16)
+
+        # create key and encrypt pickled object with it
+        key = get_random_bytes(16)
+        aes_cipher = AES.new(key,AES.MODE_EAX)
+        obj, tag = aes_cipher.encrypt_and_digest(obj)
+        nonce = aes_cipher.nonce
+
+        # encrypt key with public key
+        rsa_cipher = RSA.importKey(PUBLIC_KEY)
+        rsa_cipher = PKCS1_OAEP.new(rsa_cipher)
+        key = rsa_cipher.encrypt(key)
+
+        # create key/object dictionary, pickle and base64 encode
+        key_obj = pickle.dumps({'k': key, 'n': nonce, 'o': obj, 't': tag})
+        enc_str = "{}\n{}{}\n".format(BEGIN_PYAARLO_DUMP, base64.encodebytes(key_obj).decode(), END_PYAARLO_DUMP)
+        return Response(enc_str, mimetype='text/plain')
+    except ValueError as err:
+        return jsonify({ 'meta': { 'code': 400 },
+                         'data': { 'success': False, 'error': 'encryption error' }})
+    except Exception as ex:
+        return jsonify({ 'meta': { 'code': 400 },
+                         'data': { 'success': False, 'error': str(ex) }})
 
 
 @app.route('/register')
