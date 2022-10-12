@@ -1,4 +1,3 @@
-
 import os
 import time
 import secrets
@@ -9,7 +8,6 @@ import base64
 from flask import Flask, request, jsonify, render_template, Response
 
 from google.cloud import datastore
-
 
 BEGIN_PYAARLO_DUMP = "-----BEGIN PYAARLO DUMP-----"
 END_PYAARLO_DUMP = "-----END PYAARLO DUMP-----"
@@ -24,23 +22,22 @@ AGv/Xlc+9ScTjEp37uPiCpHcB1ur83AFTjcceDIm+VDKF4zQrj88zmL7JqZy+Upx
 UQIDAQAB
 -----END PUBLIC KEY-----"""
 
-
 datastore_client = datastore.Client()
 
 app = Flask(__name__)
 
 
 def get_arg(arg, default=None):
-    value = request.args.get(arg,None)
+    value = request.args.get(arg, None)
     if value is None:
-        value = request.values.get(arg,default)
+        value = request.values.get(arg, default)
     return value
 
 
 def fixup_email(email):
     if email is not None:
-        email = email.replace('@','.')
-        email = email.replace('+','.')
+        email = email.replace('@', '.')
+        email = email.replace('+', '.')
     return email
 
 
@@ -49,7 +46,7 @@ def check_admin_token(token):
         return False
 
     # get token from env and check for match
-    saved_token = os.environ.get('AUTH_TOKEN',None)
+    saved_token = os.environ.get('AUTH_TOKEN', None)
     if saved_token is None:
         return False
     return token == saved_token
@@ -58,7 +55,7 @@ def check_admin_token(token):
 def get_user_token(fmail):
     if fmail is not None:
         query = datastore_client.query(kind='tokens')
-        query.add_filter('fmail','=',fmail)
+        query.add_filter('fmail', '=', fmail)
         tokens = list(query.fetch())
         if tokens:
             return tokens[0]['token']
@@ -79,7 +76,7 @@ def create_user_token(fmail):
     return None
 
 
-def check_user_token(fmail,token):
+def check_user_token(fmail, token):
     if fmail is None or token is None:
         return False
     return token == get_user_token(fmail)
@@ -94,7 +91,7 @@ def is_valid_user(fmail):
 def get_user_code(fmail):
     if fmail is not None:
         query = datastore_client.query(kind='codes')
-        query.add_filter('fmail','=',fmail)
+        query.add_filter('fmail', '=', fmail)
         codes = list(query.fetch())
         if codes:
             return codes[0]
@@ -104,13 +101,13 @@ def get_user_code(fmail):
 def clear_user_code(fmail):
     if fmail is not None:
         query = datastore_client.query(kind='codes')
-        query.add_filter('fmail','=',fmail)
+        query.add_filter('fmail', '=', fmail)
         codes = query.fetch()
         for old_code in codes:
-            datastore_client.delete(datastore_client.key('codes',old_code.id))
+            datastore_client.delete(datastore_client.key('codes', old_code.id))
 
 
-def set_user_code(fmail,code):
+def set_user_code(fmail, code):
     if fmail is not None and code is not None:
         # wipe out old first
         clear_user_code(fmail)
@@ -125,12 +122,11 @@ def set_user_code(fmail,code):
         datastore_client.put(entity)
 
 
-def has_permission(fmail,token):
-    return check_admin_token(token) or check_user_token(fmail,token)
+def has_permission(fmail, token):
+    return check_admin_token(token) or check_user_token(fmail, token)
 
 
 def parse_msg(msg):
-
     # Sanity check.
     if msg is None:
         return None
@@ -140,7 +136,7 @@ def parse_msg(msg):
         line = line.rstrip()
 
         # look for code
-        m = re.match(r'.* (\d{6})\.\W*$',line)
+        m = re.match(r'.* (\d{6})\.\W*$', line)
         if m is not None:
             return m.group(1)
 
@@ -148,7 +144,6 @@ def parse_msg(msg):
 
 
 def parse_mail(mail):
-
     # Sanity check.
     if mail is None:
         return None, None
@@ -160,12 +155,12 @@ def parse_mail(mail):
         line = line.decode().rstrip()
 
         # look for fmail
-        m = re.match(r'^To:\W+<*(.+?)>*\W*$',line)
+        m = re.match(r'^To:\W+<*(.+?)>*\W*$', line)
         if m is not None:
             email = m.group(1)
 
         # look for code
-        m = re.match(r'^\W*(\d{6})\W*$',line)
+        m = re.match(r'^\W*(\d{6})\W*$', line)
         if m is not None:
             code = m.group(1)
 
@@ -175,12 +170,11 @@ def parse_mail(mail):
 @app.route('/enc')
 @app.route('/')
 def enc():
-    return render_template( 'encrypt.html' )
+    return render_template('encrypt.html')
 
 
-@app.route('/encrypt',methods=['POST'])
+@app.route('/encrypt', methods=['POST'])
 def encrypt():
-
     # fill this with file or pasted contents
     obj = None
 
@@ -193,12 +187,12 @@ def encrypt():
 
     # now check for pasted text
     if obj is None:
-        obj = request.form.get('plain_text',None)
+        obj = request.form.get('plain_text', None)
 
     # still nothing, then stop
     if obj is None:
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'no attached file or pasted text' }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'no attached file or pasted text'}})
 
     from Crypto.Cipher import AES
     from Crypto.Random import get_random_bytes
@@ -212,7 +206,7 @@ def encrypt():
 
         # create key and encrypt pickled object with it
         key = get_random_bytes(16)
-        aes_cipher = AES.new(key,AES.MODE_EAX)
+        aes_cipher = AES.new(key, AES.MODE_EAX)
         obj, tag = aes_cipher.encrypt_and_digest(obj)
         nonce = aes_cipher.nonce
 
@@ -225,151 +219,146 @@ def encrypt():
         key_obj = pickle.dumps({'k': key, 'n': nonce, 'o': obj, 't': tag})
         enc_str = "{}\n{}{}\n".format(BEGIN_PYAARLO_DUMP, base64.encodebytes(key_obj).decode(), END_PYAARLO_DUMP)
         return Response(enc_str, mimetype='text/plain')
-    except ValueError as err:
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'encryption error' }})
+    except ValueError as _err:
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'encryption error'}})
     except Exception as ex:
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': str(ex) }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': str(ex)}})
 
 
 @app.route('/register')
 def register():
-    return render_template( 'register.html' )
+    return render_template('register.html')
 
 
 @app.route('/register_done')
 def register_done():
-
-    email = request.args.get('email',None)
+    email = request.args.get('email', None)
     if email is None:
-        return jsonify({ 'success': False, 'error': 'no email supplied' })
+        return jsonify({'success': False, 'error': 'no email supplied'})
 
     fmail = fixup_email(email)
     if not is_valid_user(fmail):
         token = create_user_token(fmail)
-        return jsonify({ 'success': True,
-                            'email': email,
-                            'fwd-to': "pyaarlo@thewardrobe.ca",
-                            'token': token })
+        return jsonify({'success': True,
+                        'email': email,
+                        'fwd-to': "pyaarlo@thewardrobe.ca",
+                        'token': token})
     else:
-        return jsonify({ 'success': False, 'error': 'email already registered' })
+        return jsonify({'success': False, 'error': 'email already registered'})
 
 
 @app.route('/get')
 def get():
-
     # get args
-    email = request.args.get('email',None)
+    email = request.args.get('email', None)
     fmail = fixup_email(email)
-    token = request.args.get('token',None)
+    token = request.args.get('token', None)
 
     # validate email/token
-    if not has_permission(fmail,token):
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'permission denied', 'code': None }})
+    if not has_permission(fmail, token):
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'permission denied', 'code': None}})
     if not is_valid_user(fmail):
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'no valid email found', 'code': None }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'no valid email found', 'code': None}})
 
     # should be 0 or 1 entries
     code = get_user_code(fmail)
     if code is None:
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'no valid code found', 'code': None }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'no valid code found', 'code': None}})
 
-    return jsonify({ 'meta': { 'code': 200 },
-                     'data': { 'success': True, 'email': email, 'code': code['code'], 'timestamp': code['timestamp'] }})
+    return jsonify({'meta': {'code': 200},
+                    'data': {'success': True, 'email': email, 'code': code['code'], 'timestamp': code['timestamp']}})
 
 
 @app.route('/clear')
 def clear():
-
     # get args
-    email = request.args.get('email',None)
+    email = request.args.get('email', None)
     fmail = fixup_email(email)
-    token = request.args.get('token',None)
+    token = request.args.get('token', None)
 
     # validate email/token
-    if not has_permission(fmail,token):
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'permission denied' }})
+    if not has_permission(fmail, token):
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'permission denied'}})
     if not is_valid_user(fmail):
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'no valid email found', 'code': None }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'no valid email found', 'code': None}})
 
     # clear code
     clear_user_code(fmail)
-    return jsonify({ 'meta': { 'code': 200 },
-                     'data': { 'success': True, 'email': email }})
+    return jsonify({'meta': {'code': 200},
+                    'data': {'success': True, 'email': email}})
 
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():
-
     # get args
     email = get_arg('email')
     fmail = fixup_email(email)
     token = get_arg('token')
 
     # validate email/token
-    if not has_permission(fmail,token):
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'permission denied' }})
+    if not has_permission(fmail, token):
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'permission denied'}})
     if not is_valid_user(fmail):
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'no valid email found', 'code': None }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'no valid email found', 'code': None}})
 
     # read code if passed directly or parse from sms
     code = get_arg('code')
     if code is None:
         code = parse_msg(get_arg('msg'))
         if code is None:
-            return jsonify({ 'meta': { 'code': 400 },
-                             'data': { 'success': False, 'error': 'please provide code', 'code': None }})
+            return jsonify({'meta': {'code': 400},
+                            'data': {'success': False, 'error': 'please provide code', 'code': None}})
 
-    set_user_code(fmail,code)
-    return jsonify({ 'meta': { 'code': 200 },
-                     'data': { 'success': True, 'email': email, 'code': code }})
+    set_user_code(fmail, code)
+    return jsonify({'meta': {'code': 200},
+                    'data': {'success': True, 'email': email, 'code': code}})
 
 
-@app.route('/mail',methods=['POST'])
+@app.route('/mail', methods=['POST'])
 def mail():
-
     # check token to start
-    token = request.args.get('token',None)
+    token = request.args.get('token', None)
     if token is None:
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'no token supplied' }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'no token supplied'}})
 
     # check file is there
     if 'file' not in request.files:
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'no attached email' }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'no attached email'}})
     mail = request.files['file']
     if mail.filename != 'email.txt':
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'incorrectly attached email' }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'incorrectly attached email'}})
 
     # Search for bits we are interested in
     email, code = parse_mail(mail)
     fmail = fixup_email(email)
     if email is None or code is None:
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'unable to parse email' }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'unable to parse email'}})
 
     # permission? can be admin or user level
-    if not has_permission(fmail,token):
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'permission denied' }})
+    if not has_permission(fmail, token):
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'permission denied'}})
     if not is_valid_user(fmail):
-        return jsonify({ 'meta': { 'code': 400 },
-                         'data': { 'success': False, 'error': 'unknown email', 'code': None }})
+        return jsonify({'meta': {'code': 400},
+                        'data': {'success': False, 'error': 'unknown email', 'code': None}})
 
     # update and indicate success
-    set_user_code(fmail,code)
-    return jsonify({ 'meta': { 'code': 200 },
-                     'data': { 'success': True, 'email': email, 'code': code }})
+    set_user_code(fmail, code)
+    return jsonify({'meta': {'code': 200},
+                    'data': {'success': True, 'email': email, 'code': code}})
 
 
 if __name__ == '__main__':

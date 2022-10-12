@@ -5,6 +5,8 @@ env_variables:
   SMTP_SERVER: 'xxx.xx:2020'
   SMTP_USERNAME: 'testing'
   SMTP_PASSWORD: '123'
+  GOOGLE_CLIENT_ID: 'XXXXXX'
+  GOOGLE_CLIENT_SECRET: 'XXXXXX'
 
 handlers:
 
