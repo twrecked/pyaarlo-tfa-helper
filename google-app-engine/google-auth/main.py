@@ -24,11 +24,6 @@ def url_escape(text):
     return urllib.parse.quote(text, safe='~-._')
 
 
-def url_unescape(text):
-    # See OAUTH 5.1 for a definition of which characters need to be escaped.
-    return urllib.parse.unquote(text)
-
-
 def format_url_params(params):
     """Formats parameters into a URL query string.
   
@@ -49,7 +44,7 @@ def format_url_params(params):
 def authenticate():
     credentials = read_credentials()
     if credentials is None:
-        return "ERROR"
+        return flask.render_template('error.html', error="The system isn't deployed correctly. Contact the author.")
 
     params = {'client_id': credentials['client_id'],
               'redirect_uri': credentials['redirect_uris'][0],
@@ -66,11 +61,11 @@ def authenticate():
 def oauth2_callback():
     code = flask.request.args.get('code', None)
     if code is None:
-        return "ERROR"
+        return flask.render_template('error.html', error="The outh callback didn't supply a code.")
 
     credentials = read_credentials()
     if credentials is None:
-        return "ERROR"
+        return flask.render_template('error.html', error="The system isn't deployed correctly. Contact the author.")
 
     params = {'client_id': credentials['client_id'],
               'client_secret': credentials['client_secret'],
@@ -79,8 +74,13 @@ def oauth2_callback():
               'grant_type': 'authorization_code'}
     params = urllib.parse.urlencode(params).encode('utf-8')
     refresh_url = credentials["token_uri"]
+
     response = urllib.request.urlopen(refresh_url, params).read()
     response = json.loads(response)
+
+    refresh_token = response.get("refresh_token", None)
+    if refresh_token is None:
+        return flask.render_template('error.html', error="There was no refresh_token returned.")
 
     return flask.render_template("success.html", token=response["refresh_token"])
 
@@ -89,11 +89,11 @@ def oauth2_callback():
 def refresh():
     token = flask.request.args.get('token', None)
     if token is None:
-        return "ERROR"
+        return {'error': "You need to supply a refresh token."}, 404
 
     credentials = read_credentials()
     if credentials is None:
-        return "ERROR"
+        return {'error': "The system isn't deployed correctly. Contact the author."}, 404
 
     params = {'client_id': credentials['client_id'],
               'client_secret': credentials['client_secret'],
@@ -102,7 +102,6 @@ def refresh():
               'grant_type': 'refresh_token'}
     params = urllib.parse.urlencode(params).encode('utf-8')
     refresh_url = credentials["token_uri"]
-    print(params)
     return urllib.request.urlopen(refresh_url, params).read()
 
 
