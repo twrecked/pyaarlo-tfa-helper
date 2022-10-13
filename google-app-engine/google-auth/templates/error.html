@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<p style="font-size:larger; color:red">Failure!</p>
+
+The following error occured:
+
+<pre>
+{{error}}
+</pre>
+{{try_this}}
+
+{% endblock %}

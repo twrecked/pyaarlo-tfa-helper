@@ -1,9 +1,13 @@
 /* General Website Style rules */
 body {
     font-family: 'Roboto', sans-serif;
+    margin-left: 5%;
+    margin-right: 5%;
 }
 
 pre {
     font-family: 'Roboto Mono', monospace;
     background-color: #F8F8F8;
+    margin-left: 7%;
+    margin-right: 7%;
 }

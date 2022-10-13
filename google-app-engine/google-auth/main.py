@@ -108,13 +108,17 @@ def refresh():
 
 @app.route('/test')
 def test():
-    print("here")
     tests = {"access_token": "teesting",
              "expires_in": 3599,
              "refresh_token": "testing",
              "scope": "https://mail.google.com/",
              "token_type": "Bearer"}
     return flask.render_template("success.html", token=tests['refresh_token'])
+
+
+@app.route('/etest')
+def etest():
+    return flask.render_template("error.html", error="There is no error!")
 
 
 if __name__ == '__main__':
