@@ -82,7 +82,7 @@ def oauth2_callback():
     response = urllib.request.urlopen(refresh_url, params).read()
     response = json.loads(response)
 
-    return flask.render_template("authenticate-finish.html", token=response["refresh_token"])
+    return flask.render_template("success.html", token=response["refresh_token"])
 
 
 @app.route('/refresh')
@@ -108,13 +108,13 @@ def refresh():
 
 @app.route('/test')
 def test():
-
-    tests = {"access_token": "ya29.a0Aa4xrXMoxmlVCSWwKDSUdNcsXNZjTmHR-UARfXpNpG-FBSEReXiURNnhe1tUV4wYbc9mGOctTtB8PJSptURScdqEgWRmDLcAGMVKt5FW25aTOWKyV_IeH7ajb5ojGPcVypeT3c7PF5HWZMJCAdAxYt9VkdMSaCgYKATASARESFQEjDvL9_87oPJ7An0Y2_U_r6ekA6w0163",
+    print("here")
+    tests = {"access_token": "teesting",
              "expires_in": 3599,
-             "refresh_token": "1//0d8h5W5ZDA2eOCgYIARAAGA0SNwF-L9Ir5sSf5pF9xxJv2qI-qfD2Myg_00A1v3Fa577rE3Ki5Q3PLFpqF5nHJCi7e_v7bhKQUBE",
+             "refresh_token": "testing",
              "scope": "https://mail.google.com/",
              "token_type": "Bearer"}
-    return flask.render_template("authenticate-finish.html", token=tests['refresh_token'])
+    return flask.render_template("success.html", token=tests['refresh_token'])
 
 
 if __name__ == '__main__':

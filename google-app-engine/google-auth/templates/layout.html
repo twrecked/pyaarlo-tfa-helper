@@ -12,14 +12,8 @@
 <body>
     <div style="margin-left: 5%; margin-right: 5%;">
         <h2>Pyaarlo Google Authentication</h2>
-
-        Success! Now add the following to your current <tt>Arlo</tt> configuration.
-
-        <pre>
-aarlo:
-    imap_ouath_type: gmail
-    imap_ouath_token: {{token}}
-        </pre>
+        {% block content %}
+        {% endblock %}
     </div>
 </body>
 
