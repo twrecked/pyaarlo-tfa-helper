@@ -58,7 +58,7 @@ def authenticate():
               'access_type': 'offline'}
     params = format_url_params(params)
     url = f'{credentials["auth_uri"]}?{params}'
-    # return flask.render_template("authenticate.html", stuff=url)
+
     return flask.redirect(url)
 
 
