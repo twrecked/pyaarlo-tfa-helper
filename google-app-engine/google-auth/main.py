@@ -1,3 +1,15 @@
+"""Performs support tasks for Pyaarlo to use OAUTH authentication.
+
+In order to keep the client secret (erm...) secret, we provide a simple
+web wrapper to retrieve an OUATH2 token for Pyaarlo users. After the
+initial interactive authentication the Pyarrlo code can use the refresh
+token to return update authentication tokens without user interaction.
+
+The code requests 'https://www.googleapis.com/auth/gmail.readonly' scope,
+I tried to keep it as minimal as possible, but we do need to search for
+messages from Arlo to parse out the 2FA code.
+"""
+
 import json
 import urllib.parse
 import urllib.request
@@ -10,6 +22,11 @@ app.secret_key = 'CzPcxd2uET8rbK5ARFjCyAdVKvPKyUyh'
 
 
 def read_credentials():
+    """Read secrets and endpoint from Google provided json file.
+
+    Returns:
+        A dictionary containing the values or None on failure.
+    """
     try:
         with open('client_secret.json', 'r') as f:
             credentials = json.load(f)
@@ -42,6 +59,10 @@ def format_url_params(params):
 @app.route('/')
 @app.route('/auth')
 def authenticate():
+    """Redirect the user to the Google Authentication Webpage.
+
+    All information needed, username etc... is grabbed by the Google code.
+    """
     credentials = read_credentials()
     if credentials is None:
         return flask.render_template('error.html', error="The system isn't deployed correctly. Contact the author.")
@@ -59,6 +80,12 @@ def authenticate():
 
 @app.route('/oauth2-callback')
 def oauth2_callback():
+    """Handle the Google Authentication callback.
+
+    If everything went well the code will display the refresh
+    token and some small configuration and code snippets and how to use
+    it.
+    """
     code = flask.request.args.get('code', None)
     if code is None:
         return flask.render_template('error.html', error="The outh callback didn't supply a code.")
@@ -87,6 +114,14 @@ def oauth2_callback():
 
 @app.route('/refresh')
 def refresh():
+    """Get a new Authentication Token.
+
+    This is called from Pyaarlo when it detects a login failure to refresh
+    the authentication token.
+
+    It returns a JSON encoded string with the new token or gives an error on any
+    kind of failure.
+    """
     token = flask.request.args.get('token', None)
     if token is None:
         return {'error': "You need to supply a refresh token."}, 404
