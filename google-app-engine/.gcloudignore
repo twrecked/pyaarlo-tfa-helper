@@ -1,0 +1,8 @@
+.gcloudignore
+.git
+.gitignore
+*~
+*.in
+.*sw?
+test.sh
+index.yaml

@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div style="margin-bottom: 20px">
+<span style="font-size:larger; color:red;">Failure!</span>
+</div>
+
+The following error occured:
+<pre><code>
+{{error}}
+
+</code></pre>
+
+If this is your first time trying to get a token then try again.
+
+<br><br>
+If you've already received a token for <code>Pyaarlo</code> and want to get another
+one you have to revoke the original token. Do the following:
+
+<ol>
+    <li>Go to the <a href="https://myaccount.google.com/security">Security section of your Google Account.</a></li>
+    <li>Under “Third-party apps with account access,” select <b>Manage third-party access</b>.</li>
+    <li>Find <b>Pyaarlo</b> and select <b>REMOVE ACCESS</b>.</li>
+    <li>Re-authenticate.</li>
+</ol>
+<br>
+
+If it still fails then <a href="https://github.com/twrecked/pyaarlo-tfa-helper/issues">raise an Issue</a> on the
+project's GitHub page.
+
+{% endblock %}
