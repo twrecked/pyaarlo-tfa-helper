@@ -4,7 +4,7 @@
   Many thanks!
  */
 
-const copyButtonLabel = "Copy Configuration";
+const copyButtonLabel = "Copy Changes";
 
 // use a class selector if available
 let blocks = document.querySelectorAll("pre");
@@ -26,7 +26,7 @@ async function copyCode(event) {
   let text = code.innerText;
   await navigator.clipboard.writeText(text);
 
-  button.innerText = "Configuration Copied";
+  button.innerText = "Changes Copied";
 
   setTimeout(()=> {
     button.innerText = copyButtonLabel;

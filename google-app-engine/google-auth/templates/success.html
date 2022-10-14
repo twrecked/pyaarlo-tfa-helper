@@ -1,17 +1,20 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<span style="font-size:larger">
-    <span style="color:green">Success!</span>
-<br><br>
-Now add the following to your current <tt>Arlo</tt> configuration.
-</span>
-<br>
-<br>
+<div style="margin-bottom: 20px">
+<span style="font-size:larger; color:green;">Success!</span>
+</div>
 
+<b>Home Assistant:</b> Now add the following to your current <tt>Aarlo</tt> configuration.
 <pre class="language-yaml"><code>aarlo:
     imap_ouath_type: gmail
     imap_ouath_token: {{token}}
+</code></pre>
+
+<b>PyAarlo:</b> Use these parameters when creating a <tt>Pyaarlo</tt> object.
+<pre class="language-python"><code>ar = pyaarlo.PyArlo(username=USERNAME, password=PASSWORD,
+            tfa_oauth_type='gmail',
+            tfa_oauth_token='{{token}}', ... )
 </code></pre>
 
 {% endblock %}

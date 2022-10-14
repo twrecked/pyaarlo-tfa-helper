@@ -8,13 +8,11 @@ body {
 pre {
     font-family: 'Roboto Mono', monospace;
     background-color: #F8F8F8;
-    margin-left: 2%;
-    margin-right: 2%;
+    margin: 2% 1%;
 }
 
 pre[class*="language-"] {
     position: relative;
-    margin: 5px 0;
     padding: 1.75rem 0 1.75rem 1rem;
 }
 
