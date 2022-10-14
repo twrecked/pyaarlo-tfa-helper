@@ -26,7 +26,7 @@ async function copyCode(event) {
   let text = code.innerText;
   await navigator.clipboard.writeText(text);
 
-  button.innerText = "Changes Copied";
+  button.innerText = "Changes Copied to Clipboard";
 
   setTimeout(()=> {
     button.innerText = copyButtonLabel;

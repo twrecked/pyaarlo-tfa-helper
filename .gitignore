@@ -1,7 +1,8 @@
-app.yaml
 *~
 .*.sw?
-client_secret.json
+app.yaml
 auth.yaml
+client_secret.json
 google-auth.yaml
+index.yaml
 
