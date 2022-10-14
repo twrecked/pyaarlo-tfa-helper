@@ -218,7 +218,7 @@ def encrypt():
         # create key/object dictionary, pickle and base64 encode
         key_obj = pickle.dumps({'k': key, 'n': nonce, 'o': obj, 't': tag})
         enc_str = "{}\n{}{}\n".format(BEGIN_PYAARLO_DUMP, base64.encodebytes(key_obj).decode(), END_PYAARLO_DUMP)
-        return Response(enc_str, mimetype='text/plain')
+        return render_template('encrypted.html', encrypted=enc_str)
     except ValueError as _err:
         return jsonify({'meta': {'code': 400},
                         'data': {'success': False, 'error': 'encryption error'}})
