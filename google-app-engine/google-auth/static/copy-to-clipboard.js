@@ -20,7 +20,7 @@ blocks.forEach((block) => {
 });
 
 async function copyCode(event) {
-  const button = event.srcElement;
+  const button = event.target;
   const pre = button.parentElement;
   let code = pre.querySelector("code");
   let text = code.innerText;
@@ -32,4 +32,3 @@ async function copyCode(event) {
     button.innerText = copyButtonLabel;
   },1000)
 }
-

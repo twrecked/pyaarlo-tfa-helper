@@ -5,13 +5,13 @@
 <span style="font-size:larger; color:green;">Success!</span>
 </div>
 
-<b>Home Assistant:</b> Now add the following to your current <tt>Aarlo</tt> configuration.
+<b>Home Assistant:</b> Now add the following to your current <code>Aarlo</code> configuration.
 <pre class="language-yaml"><code>aarlo:
     imap_ouath_type: gmail
     imap_ouath_token: {{token}}
 </code></pre>
 
-<b>PyAarlo:</b> Use these parameters when creating a <tt>Pyaarlo</tt> object.
+<b>PyAarlo:</b> Use these parameters when creating a <code>Pyaarlo</code> object.
 <pre class="language-python"><code>ar = pyaarlo.PyArlo(username=USERNAME, password=PASSWORD,
             tfa_oauth_type='gmail',
             tfa_oauth_token='{{token}}', ... )
