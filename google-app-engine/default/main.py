@@ -4,6 +4,7 @@ import secrets
 import re
 import pickle
 import base64
+import json
 
 from flask import Flask, request, jsonify, render_template, Response
 
@@ -210,25 +211,35 @@ def encrypt():
     from Crypto.Cipher import PKCS1_OAEP
 
     try:
-        # pickle and resize object
-        obj = pickle.dumps(obj)
-        obj += b' ' * (16 - len(obj) % 16)
+        # encode plain text directly to utf-8 bytes
+        obj_bytes = obj.encode("utf-8") if isinstance(obj, str) else bytes(obj)
 
-        # create key and encrypt pickled object with it
+        # create key and encrypt object with it
         key = get_random_bytes(16)
         aes_cipher = AES.new(key, AES.MODE_EAX)
-        obj, tag = aes_cipher.encrypt_and_digest(obj)
+        ciphertext, tag = aes_cipher.encrypt_and_digest(obj_bytes)
         nonce = aes_cipher.nonce
 
         # encrypt key with public key
         rsa_cipher = RSA.importKey(PUBLIC_KEY)
         rsa_cipher = PKCS1_OAEP.new(rsa_cipher)
-        key = rsa_cipher.encrypt(key)
+        enc_key = rsa_cipher.encrypt(key)
 
-        # create key/object dictionary, pickle and base64 encode
-        key_obj = pickle.dumps({'k': key, 'n': nonce, 'o': obj, 't': tag})
-        enc_str = "{}\n{}{}\n".format(BEGIN_PYAARLO_DUMP, base64.encodebytes(key_obj).decode(), END_PYAARLO_DUMP)
-        return render_template('encrypted.html', encrypted=enc_str)
+        # create key/object dictionary as JSON with base64 encoded binary fields
+        envelope = {
+            "v": 2,
+            "k": base64.b64encode(enc_key).decode("ascii"),
+            "n": base64.b64encode(nonce).decode("ascii"),
+            "o": base64.b64encode(ciphertext).decode("ascii"),
+            "t": base64.b64encode(tag).decode("ascii"),
+        }
+        json_bytes = json.dumps(envelope).encode("utf-8")
+        enc_str = "{}\n{}{}\n".format(
+            BEGIN_PYAARLO_DUMP,
+            base64.encodebytes(json_bytes).decode("ascii"),
+            END_PYAARLO_DUMP,
+        )
+        return render_template("encrypted.html", encrypted=enc_str)
     except ValueError as _err:
         return jsonify({'meta': {'code': 400},
                         'data': {'success': False, 'error': 'encryption error'}})
